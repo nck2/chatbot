@@ -108,7 +108,7 @@ def format_docs(docs):
 
 prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", "Answer the question using ONLY the following context. If the answer is not found in the context below, reply in Korean with: '문서에서 찾을 수 없습니다.' The information cannot be found in the document. DON'T make anything up.\n\nContext: {context}"),
+           ("system", "Answer the question using ONLY the following context. If you don't know the answer just say you don't know in Korean. DON'T make anything up.\n\nContext: {context}"),
         ("human", "{question}"),
     ]
 )
