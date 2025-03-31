@@ -15,9 +15,23 @@ from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
 # from langchain_community.chat_models import ChatOpenAI
 from langchain.callbacks.base import BaseCallbackHandler
 import streamlit as st
-from dotenv import load_dotenv
 
-load_dotenv()
+
+
+def get_api_key():
+    # st.secrets.get은 None 반환하므로 안전
+    cloud_key = st.secrets.get("api_keys", {}).get("openai")
+    if cloud_key:
+        return cloud_key
+
+    # 로컬용 .env 환경 변수
+    from dotenv import load_dotenv
+    load_dotenv()
+    return os.getenv("OPENAI_API_KEY")
+
+
+api_key = get_api_key()
+
 
 
 if "logged_in" not in st.session_state or not st.session_state.logged_in:
@@ -43,6 +57,8 @@ llm = ChatOpenAI(
     temperature=0.1,
     streaming=True,
     callbacks=[ChatCallbackHandler()],
+    api_key=api_key
+
 )
 
 # ✅ 여러 문서 로딩 & 벡터 생성
