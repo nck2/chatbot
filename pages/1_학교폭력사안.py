@@ -20,7 +20,7 @@ import streamlit as st
 
 def get_api_key():
     # st.secrets.get은 None 반환하므로 안전
-    cloud_key = st.secrets.get("api_keys", {}).get("openai")
+    cloud_key = st.secrets["OPENAI_API_KEY"]
     if cloud_key:
         return cloud_key
 
@@ -57,7 +57,6 @@ llm = ChatOpenAI(
     temperature=0.1,
     streaming=True,
     callbacks=[ChatCallbackHandler()],
-    api_key=api_key
 
 )
 

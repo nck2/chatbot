@@ -13,7 +13,7 @@ def login():
     password = st.text_input("Password", type="password")
     
     # db_user = st.secrets["user"]
-    db_pass =  st.secrets.get("api_keys", {}).get("password")
+    db_pass =  st.secrets["password"]
 
     if st.button("Login"):
         if password and password==db_pass:
