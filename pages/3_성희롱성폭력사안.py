@@ -18,9 +18,12 @@ load_dotenv()
 
 if "logged_in" not in st.session_state or not st.session_state.logged_in:
     st.error("🚫 로그인해야 사용가능합니다. Home 으로 가세요.")
-    st.markdown("[Back to Login](./)")
-    st.stop()
+    # st.markdown("[Back to Login](./)")
+    st.markdown("""
+    <a href="./" target="_self">🔙 Home으로 가서 로그인하기</a>
+""", unsafe_allow_html=True)
 
+    st.stop()
 # ✅ 폴더 안의 모든 PDF 문서를 대상
 STATIC_DIR = Path("./static/sexualharassment")
 
