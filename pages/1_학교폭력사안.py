@@ -18,19 +18,19 @@ import streamlit as st
 
 
 
-def get_api_key():
-    # st.secrets.get은 None 반환하므로 안전
-    cloud_key = st.secrets["OPENAI_API_KEY"]
-    if cloud_key:
-        return cloud_key
+# def get_api_key():
+#     # st.secrets.get은 None 반환하므로 안전
+#     cloud_key = st.secrets["OPENAI_API_KEY"]
+#     if cloud_key:
+#         return cloud_key
 
-    # 로컬용 .env 환경 변수
-    from dotenv import load_dotenv
-    load_dotenv()
-    return os.getenv("OPENAI_API_KEY")
+#     # 로컬용 .env 환경 변수
+#     from dotenv import load_dotenv
+#     load_dotenv()
+#     return os.getenv("OPENAI_API_KEY")
 
 
-api_key = get_api_key()
+# api_key = get_api_key()
 
 
 
@@ -87,7 +87,7 @@ def load_all_documents():
     return vectorstore.as_retriever()
 
 def save_message(message, role):
-    st.session_state["messages"].append({"message": message, "role": role})
+    st.session_state["messages1"].append({"message": message, "role": role})
 
 def send_message(message, role, save=True):
     with st.chat_message(role):
@@ -96,7 +96,7 @@ def send_message(message, role, save=True):
         save_message(message, role)
 
 def paint_history():
-    for message in st.session_state["messages"]:
+    for message in st.session_state["messages1"]:
         send_message(message["message"], message["role"], save=False)
 
 def format_docs(docs):
@@ -115,8 +115,10 @@ st.title("📂 학교폭력사안 챗봇")
 st.markdown("##### 각종 학교폭력사안에 대해 문서(**사안처리가이드북, 알쓸소중**)를 근거로 대답합니다.")
 
 # 세션 초기화
-if "messages" not in st.session_state:
-    st.session_state["messages"] = []
+if "messages1" not in st.session_state:
+    st.session_state["messages1"] = []
+
+
 
 # 문서 불러오기
 retriever = load_all_documents()
@@ -143,7 +145,7 @@ if message:
         chain.invoke(message)
 
     # ✅ 각 문서 + 페이지 번호 표시
-    with st.expander("🔍 참고문헌", expanded=True):
+    with st.expander("🔍 참고문헌", expanded=False):
         for i, doc in enumerate(relevant_docs, start=1):
             source = doc.metadata.get("source", "Unknown")
             page = doc.metadata.get("page", "❓")
