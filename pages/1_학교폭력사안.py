@@ -1,11 +1,10 @@
 import os
 from pathlib import Path
-from langchain_community.document_loaders import PyMuPDFLoader
+from langchain_community.document_loaders import PyMuPDFLoader, PDFPlumberLoader
 from langchain.embeddings import CacheBackedEmbeddings
 # from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
-
 
 from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import CharacterTextSplitter
@@ -69,15 +68,18 @@ llm = ChatOpenAI(
 def load_all_documents():
     all_docs = []
     for file_path in STATIC_DIR.glob("*.pdf"):
-        loader = PyMuPDFLoader(str(file_path))
+        # loader = PyMuPDFLoader(str(file_path))
+        loader = PDFPlumberLoader(str(file_path))
+
         raw_docs = loader.load()
+
 
         # 각 문서에 file_name 추가
         for doc in raw_docs:
             doc.metadata["source"] = file_path.name
 
         splitter = CharacterTextSplitter.from_tiktoken_encoder(
-            separator="\n", chunk_size=600, chunk_overlap=100,
+            separator="\n", chunk_size=800, chunk_overlap=100,
         )
         chunks = splitter.split_documents(raw_docs)
         all_docs.extend(chunks)
@@ -88,7 +90,9 @@ def load_all_documents():
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, store)
     vectorstore = FAISS.from_documents(all_docs, cached_embeddings)
     print("📄 문서 임베딩 실행됨")
-    return vectorstore.as_retriever()
+    # return vectorstore.as_retriever()
+    return vectorstore.as_retriever(search_kwargs={"k": 8})
+
 
 def save_message(message, role):
     st.session_state["messages1"].append({"message": message, "role": role})
@@ -116,7 +120,7 @@ prompt = ChatPromptTemplate.from_messages(
 # ✅ Streamlit 시작
 st.set_page_config(page_title="학교폭력사안 챗봇", page_icon="📂")
 st.title("📂 학교폭력사안 챗봇")
-st.markdown("##### 각종 학교폭력사안에 대해 문서(**사안처리가이드북, 알쓸소중**)를 근거로 대답합니다.")
+st.markdown("##### 각종 학교폭력사안에 대해 문서(**사안처리가이드북**)를 근거로 대답합니다.")
 
 # 세션 초기화
 if "messages1" not in st.session_state:
@@ -132,8 +136,15 @@ paint_history()
 message = st.chat_input("Ask about the documents...")
 if message:
     send_message(message, "human")
-    # relevant_docs = retriever.get_relevant_documents(message)
-    relevant_docs = retriever.invoke(message)
+
+    docs_with_scores = retriever.vectorstore.similarity_search_with_score(message, k=10)
+    # 점수 기준으로 상위 4개만 선택 (점수 낮을수록 유사도가 높음)
+    top_docs = sorted(docs_with_scores, key=lambda x: x[1])[:4]
+    # 문서만 추출
+    relevant_docs = [doc for doc, score in top_docs]
+
+
+
 
 
     chain = (
@@ -150,8 +161,8 @@ if message:
 
     # ✅ 각 문서 + 페이지 번호 표시
     with st.expander("🔍 참고문헌", expanded=False):
-        for i, doc in enumerate(relevant_docs, start=1):
+        for i, (doc, score) in enumerate(top_docs, start=1):
             source = doc.metadata.get("source", "Unknown")
             page = doc.metadata.get("page", "❓")
-            st.markdown(f"**문서 {i} — 📄 `{source}` | Page {page+1}**")
+            st.markdown(f"**문서 {i} — 📄 `{source}` | Page {page+1} | 유사도: {score:.4f}**")
             st.code(doc.page_content.strip(), language="markdown")
