@@ -37,6 +37,10 @@ def login_page():
 def main_page():
     st.success("Welcome!")
     st.markdown("옆의 사이드바에서 원하는 페이지로 가세요!")
+    st.markdown( """**주의사항** \n 
+                1. 질문과 답변을 기억하지 않습니다. 질문할때 마다 처음하듯이 자세히 질문해주세요. \n
+                2. 문서에 유사도를 찾는 방식이므로 최대한 자세히 질문해주세요. """)
+
 
     if st.button("Logout"):
         st.session_state.logged_in = False
